@@ -16,6 +16,8 @@ function Counter() {
   setInterval(free,1000)
   setInterval(hover,1000)
 
+  const bonusType = "click"
+  console.log(Bonus[bonusType])
 
   return (
     <div>
@@ -26,12 +28,26 @@ function Counter() {
       </h1>
       <StoreItem emoji="👵" name="Granny" bonusAmount={6} cost={80} bonusType="free"/>
       <StoreItem emoji="👦" name="Little Boy" bonusAmount={20} cost={300} bonusType="hover"/>
+      <StoreItem emoji="🧑‍💻" name="Cookie Developer" bonusAmount={35} cost={1_000} bonusType="click"/>
+      <StoreItem emoji="🥠" name="Fortunate Cookies" bonusAmount={25} cost={3_000} bonusType="free"/>
+      <StoreItem emoji="🌑" name="Cookie Moon" bonusAmount={75} cost={10_000} bonusType="hover"/>
+      <StoreItem emoji="🪐" name="Cookie Planet" bonusAmount={200} cost={100_000} bonusType="click"/>
     </div>
   );
 }
 
-function StoreItem(props:{emoji:string, name:string, cost:number, bonusType:string, bonusAmount:number}) {
-  return <div>
+function StoreItem(props:{emoji:string, name:string, cost:number, bonusType: keyof typeof Bonus, bonusAmount:number}) {
+  const canBuy = () => count() > props.cost
+  const textColor = () => {
+    if (!canBuy()) return "gray"
+    else return "white"
+  }
+  const buyItem = () => {
+    if (!canBuy()) return
+    setCount(count() - props.cost)
+    Bonus[props.bonusType] += props.bonusAmount
+  }
+  return <div style={`color: ${textColor()}`} onClick={buyItem}>
     <h2>{props.emoji} {props.name}</h2>
     <p>{props.bonusAmount}, Costs: {props.cost}</p>
   </div>
