@@ -10,8 +10,8 @@ const [game, setGame] = createStore({
     createItem("👦", "Little Boy", 20, 300, "hover"),
     createItem("🧑‍💻", "Cookie Developer", 35, 1_000, "click"),
     createItem("🥠", "Fortunate Cookies", 25, 3_000, "free"),
-    createItem("🌑", "Cookie Moon", 75, 10_000, "click"),
-    createItem("🪐", "Cookie Planet", 200, 100_000, "free"),
+    createItem("🌑", "Cookie Moon", 75, 10_000, "hover"),
+    createItem("🪐", "Cookie Planet", 200, 100_000, "click"),
   ]
 })
 type Item = ReturnType<typeof createItem>
