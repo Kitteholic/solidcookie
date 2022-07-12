@@ -1,6 +1,7 @@
 import { render } from "solid-js/web";
 import { createSignal } from "solid-js";
 const Bonus = {free:1, hover:3, click:10}
+const Icon = {free: "💸", hover: "🛸", click: "👆"}
 const [count, setCount] = createSignal(0);
 function Counter() {
   const [hoverActive, setHoverActive] = createSignal(false)
@@ -20,11 +21,11 @@ function Counter() {
   console.log(Bonus[bonusType])
 
   return (
-    <div>
-      <h1>{count()} <br/>
-        <span onClick={increment} onMouseOver={() => setHoverActive(true)} onMouseLeave={() => setHoverActive(false)}>
+    <div style="display: flex; flex-direction: column; align-items: center; text-align: center;">
+      <h1 style="font-size: 2.5em">{count()} <br/>
+        <big onClick={increment} onMouseOver={() => setHoverActive(true)} onMouseLeave={() => setHoverActive(false)}>
           🍪
-        </span>
+        </big>
       </h1>
       <StoreItem emoji="👵" name="Granny" bonusAmount={6} cost={80} bonusType="free"/>
       <StoreItem emoji="👦" name="Little Boy" bonusAmount={20} cost={300} bonusType="hover"/>
@@ -47,10 +48,24 @@ function StoreItem(props:{emoji:string, name:string, cost:number, bonusType: key
     setCount(count() - props.cost)
     Bonus[props.bonusType] += props.bonusAmount
   }
-  return <div style={`color: ${textColor()}`} onClick={buyItem}>
-    <h2>{props.emoji} {props.name}</h2>
-    <p>{props.bonusAmount}, Costs: {props.cost}</p>
-  </div>
+  return (
+    <div style={`color: ${textColor()}; width: 400px; text-align: left; border-bottom: 1px solid #fff8; padding-bottom: 1em;`} onClick={buyItem}>
+      <h2>{props.emoji} {props.name}</h2>
+      <Badge>
+        {Icon[props.bonusType]} {props.bonusAmount}
+      </Badge> 
+      <Badge>
+        Price: {props.cost}
+      </Badge>
+    </div>
+  )
 }
 
+function Badge(props: { children: any }) {
+  return (
+    <span style="margin-right: .5em; border-radius: .5em; background: #0004; padding: 0 .5em .1em">
+      {props.children}
+    </span>
+  )
+}
 render(() => <Counter />, document.getElementById("app")!);
