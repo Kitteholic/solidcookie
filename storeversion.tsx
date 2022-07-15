@@ -1,10 +1,12 @@
 import { render } from "solid-js/web";
-import { createSignal, For } from "solid-js";
-import { createStore } from "solid-js/store"
-const Bonus = {free:1, hover:3, click:10}
+import { createSignal, For, createEffect } from "solid-js";
+import { createStore  } from "solid-js/store"
+
 const Icon = {free: "💸", hover: "🛸", click: "👆"}
-const [game, setGame] = createStore({
+
+const originalGame = {
   count: 0,
+  bonus: {free:1, hover:3, click:10},
   buyStuff: [
     createItem("👵", "Granny", 6, 80, "free"),
     createItem("👦", "Little Boy", 20, 300, "hover"),
@@ -13,15 +15,18 @@ const [game, setGame] = createStore({
     createItem("🌑", "Cookie Moon", 75, 10_000, "hover"),
     createItem("🪐", "Cookie Planet", 200, 100_000, "click"),
   ]
-})
+}
+
+const [game, setGame] = createStore<typeof originalGame>(JSON.parse(JSON.stringify(originalGame)))
+type Bonus = {free:number, hover:number, click:number}
 type Item = ReturnType<typeof createItem>
-function createItem(emoji:string, name:string, bonusAmount:number, cost:number, bonusType: keyof typeof Bonus) {
+function createItem(emoji:string, name:string, bonusAmount:number, cost:number, bonusType: keyof Bonus) {
   return { 
-    emoji, name, bonusAmount, cost, bonusType, 
-    canBuy() {
-      return game.count > this.cost
-    }  
+    emoji, name, bonusAmount, cost, bonusType
   }
+}
+function canBuy(item: Item) {
+  return game.count > item.cost
 }
 
 const updateGame = {
@@ -32,35 +37,44 @@ const updateGame = {
     setGame("count", game.count - amount)
   },
   increasePrice(increaseBy:number, id:number) {
-    const newAmount = increaseBy * game.buyStuff[id].cost
+    const newAmount = Math.round(increaseBy * game.buyStuff[id].cost)
      setGame("buyStuff", id, "cost", newAmount)
   },
   buyItem(id:number) {
     const item = game.buyStuff[id]
-    if (!item.canBuy()) return
+    if (!canBuy(item)) return
     updateGame.subtract(item.cost)
-    Bonus[item.bonusType] += item.bonusAmount
+    setGame("bonus", item.bonusType, game.bonus[item.bonusType] + item.bonusAmount) 
     updateGame.increasePrice(1.5, id)
+  },
+  resetGame() {
+    setGame(JSON.parse(JSON.stringify(originalGame)))
   }
 }
+function useLocalStorage() {
+  // updates local storage when game changes
+  createEffect(() => localStorage.setItem('game', JSON.stringify(game)))
+  // sets the game from storage when starting up
+  let json = localStorage.getItem("game")
+  if (!json) json = JSON.stringify(originalGame)
+  setGame(JSON.parse(json))
+}
 function Counter() {
-  const [hoverActive, setHoverActive] = createSignal(false)
-  const increment = () => updateGame.add(Bonus.click)
-
-  const free = () => updateGame.add(Bonus.free)
+  useLocalStorage()
   
+  const [hoverActive, setHoverActive] = createSignal(false)
 
+  const increment = () => updateGame.add(game.bonus.click)
+  const free = () => updateGame.add(game.bonus.free)
   const hover = () => {
     if (hoverActive()) {
-      updateGame.add(Bonus.hover)
+      updateGame.add(game.bonus.hover)
     } 
   }
 
   setInterval(free,1000)
   setInterval(hover,1000)
 
-  const bonusType = "click"
-  console.log(Bonus[bonusType])
 
   return (
     <div style="display: flex; flex-direction: column; align-items: center; text-align: center;">
@@ -72,13 +86,15 @@ function Counter() {
       <For each={game.buyStuff}>
       {(stuff, i) => <StoreItem {...stuff} itemId={i()}/>}
       </For>
+      <br/>
+      <button onClick={(updateGame.resetGame)} >Reset Game</button>
     </div>
   );
 }
 
 function StoreItem(props:Item & {itemId:number}) {
   const textColor = () => {
-    if (props.canBuy()) return "white"
+    if (canBuy(props)) return "white"
     else return "gray"
   }
   return (
